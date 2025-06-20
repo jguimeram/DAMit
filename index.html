@@ -1,0 +1,1098 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AssetFlow - Digital Asset Management</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/alpinejs/3.13.3/cdn.min.js" defer></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 280px;
+            height: 100vh;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-right: 1px solid rgba(255, 255, 255, 0.2);
+            z-index: 1000;
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar.collapsed {
+            transform: translateX(-200px);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            padding: 24px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .logo i {
+            font-size: 2rem;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-right: 12px;
+        }
+
+        .logo h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .nav-menu {
+            padding: 24px 0;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 24px;
+            color: #64748b;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            border-left: 3px solid transparent;
+        }
+
+        .nav-item:hover, .nav-item.active {
+            background: rgba(102, 126, 234, 0.1);
+            color: #667eea;
+            border-left-color: #667eea;
+        }
+
+        .nav-item i {
+            width: 20px;
+            margin-right: 12px;
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: 280px;
+            transition: margin-left 0.3s ease;
+        }
+
+        .main-content.expanded {
+            margin-left: 80px;
+        }
+
+        /* Header */
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 16px 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .toggle-sidebar {
+            background: none;
+            border: none;
+            font-size: 1.2rem;
+            color: #64748b;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 8px;
+            transition: background 0.3s ease;
+        }
+
+        .toggle-sidebar:hover {
+            background: rgba(102, 126, 234, 0.1);
+            color: #667eea;
+        }
+
+        .search-bar {
+            position: relative;
+            width: 400px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 12px 16px 12px 48px;
+            border: 2px solid rgba(102, 126, 234, 0.2);
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.8);
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #667eea;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #64748b;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        /* Content Area */
+        .content {
+            padding: 32px;
+        }
+
+        .content-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+        }
+
+        .page-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: white;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .view-controls {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 8px;
+            border-radius: 12px;
+        }
+
+        .view-btn {
+            padding: 8px 12px;
+            border: none;
+            background: transparent;
+            color: #64748b;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .view-btn.active, .view-btn:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        /* Filters */
+        .filters {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .filter-row {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .filter-select {
+            padding: 8px 12px;
+            border: 1px solid rgba(102, 126, 234, 0.3);
+            border-radius: 8px;
+            background: white;
+            min-width: 120px;
+        }
+
+        .filter-tag {
+            background: rgba(102, 126, 234, 0.1);
+            color: #667eea;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .filter-tag .remove {
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        /* Asset Grid */
+        .assets-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+
+        .asset-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 16px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .asset-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .asset-preview {
+            height: 200px;
+            background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .asset-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .asset-preview .placeholder {
+            font-size: 3rem;
+            color: #94a3b8;
+        }
+
+        .asset-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .asset-card:hover .asset-overlay {
+            opacity: 1;
+        }
+
+        .asset-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .action-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .action-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.1);
+        }
+
+        .asset-info {
+            padding: 16px;
+        }
+
+        .asset-title {
+            font-weight: 600;
+            margin-bottom: 4px;
+            color: #1e293b;
+        }
+
+        .asset-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+            color: #64748b;
+            margin-bottom: 8px;
+        }
+
+        .asset-tags {
+            display: flex;
+            gap: 4px;
+            flex-wrap: wrap;
+        }
+
+        .asset-tag {
+            background: rgba(102, 126, 234, 0.1);
+            color: #667eea;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 10px;
+        }
+
+        /* Upload Area */
+        .upload-area {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border: 2px dashed rgba(102, 126, 234, 0.3);
+            border-radius: 16px;
+            padding: 48px;
+            text-align: center;
+            margin-bottom: 32px;
+            transition: all 0.3s ease;
+        }
+
+        .upload-area.dragover {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.05);
+        }
+
+        .upload-icon {
+            font-size: 3rem;
+            color: #667eea;
+            margin-bottom: 16px;
+        }
+
+        .upload-text {
+            font-size: 1.1rem;
+            margin-bottom: 8px;
+            color: #1e293b;
+        }
+
+        .upload-subtext {
+            color: #64748b;
+            font-size: 14px;
+        }
+
+        /* Modal */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(5px);
+            z-index: 2000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .modal.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 16px;
+            max-width: 800px;
+            max-height: 90vh;
+            overflow-y: auto;
+            transform: scale(0.9);
+            transition: transform 0.3s ease;
+        }
+
+        .modal.active .modal-content {
+            transform: scale(1);
+        }
+
+        .modal-header {
+            padding: 24px;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: #64748b;
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 4px;
+            transition: background 0.3s ease;
+        }
+
+        .close-btn:hover {
+            background: rgba(102, 126, 234, 0.1);
+            color: #667eea;
+        }
+
+        .modal-body {
+            padding: 24px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.active {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .search-bar {
+                width: 200px;
+            }
+
+            .assets-grid {
+                grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+                gap: 16px;
+            }
+
+            .content {
+                padding: 16px;
+            }
+
+            .filter-row {
+                flex-direction: column;
+                align-items: stretch;
+            }
+        }
+    </style>
+</head>
+<body x-data="damApp()">
+    <!-- Sidebar -->
+    <div class="sidebar" :class="{ 'collapsed': sidebarCollapsed }">
+        <div class="logo">
+            <i class="fas fa-layer-group"></i>
+            <h1>AssetFlow</h1>
+        </div>
+        
+        <nav class="nav-menu">
+            <a href="#" class="nav-item active">
+                <i class="fas fa-th-large"></i>
+                <span>All Assets</span>
+            </a>
+            <a href="#" class="nav-item">
+                <i class="fas fa-images"></i>
+                <span>Images</span>
+            </a>
+            <a href="#" class="nav-item">
+                <i class="fas fa-file-video"></i>
+                <span>Videos</span>
+            </a>
+            <a href="#" class="nav-item">
+                <i class="fas fa-file-pdf"></i>
+                <span>Documents</span>
+            </a>
+            <a href="#" class="nav-item">
+                <i class="fas fa-palette"></i>
+                <span>Graphics</span>
+            </a>
+            <a href="#" class="nav-item">
+                <i class="fas fa-font"></i>
+                <span>Fonts</span>
+            </a>
+            <a href="#" class="nav-item">
+                <i class="fas fa-star"></i>
+                <span>Favorites</span>
+            </a>
+            <a href="#" class="nav-item">
+                <i class="fas fa-clock"></i>
+                <span>Recent</span>
+            </a>
+            <a href="#" class="nav-item">
+                <i class="fas fa-trash"></i>
+                <span>Trash</span>
+            </a>
+            <a href="#" class="nav-item">
+                <i class="fas fa-cog"></i>
+                <span>Settings</span>
+            </a>
+        </nav>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content" :class="{ 'expanded': sidebarCollapsed }">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-left">
+                <button class="toggle-sidebar" @click="sidebarCollapsed = !sidebarCollapsed">
+                    <i class="fas fa-bars"></i>
+                </button>
+                
+                <div class="search-bar">
+                    <i class="fas fa-search search-icon"></i>
+                    <input type="text" class="search-input" placeholder="Search assets..." x-model="searchQuery">
+                </div>
+            </div>
+            
+            <div class="header-right">
+                <button class="btn-primary" @click="showUploadModal = true">
+                    <i class="fas fa-plus"></i>
+                    Upload Assets
+                </button>
+                
+                <div class="user-avatar">
+                    JD
+                </div>
+            </div>
+        </header>
+
+        <!-- Content -->
+        <main class="content">
+            <div class="content-header">
+                <h1 class="page-title">All Assets</h1>
+                
+                <div class="view-controls">
+                    <button class="view-btn active" @click="viewMode = 'grid'">
+                        <i class="fas fa-th"></i>
+                    </button>
+                    <button class="view-btn" @click="viewMode = 'list'">
+                        <i class="fas fa-list"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Filters -->
+            <div class="filters">
+                <div class="filter-row">
+                    <div class="filter-group">
+                        <label>Type:</label>
+                        <select class="filter-select">
+                            <option>All Types</option>
+                            <option>Images</option>
+                            <option>Videos</option>
+                            <option>Documents</option>
+                        </select>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label>Date:</label>
+                        <select class="filter-select">
+                            <option>Any Date</option>
+                            <option>Today</option>
+                            <option>This Week</option>
+                            <option>This Month</option>
+                        </select>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label>Size:</label>
+                        <select class="filter-select">
+                            <option>Any Size</option>
+                            <option>Small</option>
+                            <option>Medium</option>
+                            <option>Large</option>
+                        </select>
+                    </div>
+                    
+                    <div class="filter-tag">
+                        Brand: Logo <span class="remove">×</span>
+                    </div>
+                    
+                    <div class="filter-tag">
+                        Campaign: 2024 <span class="remove">×</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Upload Area -->
+            <div class="upload-area" 
+                 @drop.prevent="handleDrop($event)" 
+                 @dragover.prevent="dragOver = true" 
+                 @dragleave.prevent="dragOver = false"
+                 :class="{ 'dragover': dragOver }">
+                <i class="fas fa-cloud-upload-alt upload-icon"></i>
+                <div class="upload-text">Drag and drop files here</div>
+                <div class="upload-subtext">or click to browse (PNG, JPG, PDF, AI, PSD up to 100MB)</div>
+            </div>
+
+            <!-- Assets Grid -->
+            <div class="assets-grid">
+                <!-- Sample Asset Cards -->
+                <div class="asset-card" @click="showAssetModal = true">
+                    <div class="asset-preview">
+                        <img src="https://images.unsplash.com/photo-1611224923853-80b023f02d71?w=600&h=400&fit=crop" 
+                             alt="Company Logo" 
+                             style="width: 100%; border-radius: 12px; margin-bottom: 16px;">
+                        
+                        <div style="display: flex; gap: 12px; margin-bottom: 24px;">
+                            <button class="btn-primary">
+                                <i class="fas fa-download"></i>
+                                Download
+                            </button>
+                            <button style="background: #f8fafc; color: #64748b; border: 1px solid #e2e8f0; padding: 12px 24px; border-radius: 10px; font-weight: 600; cursor: pointer;">
+                                <i class="fas fa-share"></i>
+                                Share
+                            </button>
+                            <button style="background: #f8fafc; color: #64748b; border: 1px solid #e2e8f0; padding: 12px 24px; border-radius: 10px; font-weight: 600; cursor: pointer;">
+                                <i class="fas fa-heart"></i>
+                                Favorite
+                            </button>
+                        </div>
+
+                        <div style="background: #f8fafc; padding: 20px; border-radius: 12px;">
+                            <h3 style="margin-bottom: 16px; color: #1e293b;">Asset Information</h3>
+                            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; font-size: 14px;">
+                                <div><strong>File Type:</strong> PNG</div>
+                                <div><strong>File Size:</strong> 2.3 MB</div>
+                                <div><strong>Dimensions:</strong> 1920 × 1080</div>
+                                <div><strong>Color Mode:</strong> RGB</div>
+                                <div><strong>Created:</strong> Dec 15, 2024</div>
+                                <div><strong>Modified:</strong> Dec 17, 2024</div>
+                                <div><strong>Creator:</strong> John Designer</div>
+                                <div><strong>Project:</strong> Brand Refresh 2024</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <div style="background: #f8fafc; padding: 20px; border-radius: 12px; margin-bottom: 20px;">
+                            <h3 style="margin-bottom: 12px; color: #1e293b;">Tags</h3>
+                            <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px;">
+                                <span class="asset-tag">logo</span>
+                                <span class="asset-tag">brand</span>
+                                <span class="asset-tag">identity</span>
+                                <span class="asset-tag">2024</span>
+                                <span class="asset-tag">primary</span>
+                            </div>
+                            <input type="text" placeholder="Add new tag..." 
+                                   style="width: 100%; padding: 8px 12px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 14px;">
+                        </div>
+                        
+                        <div style="background: #f8fafc; padding: 20px; border-radius: 12px; margin-bottom: 20px;">
+                            <h3 style="margin-bottom: 12px; color: #1e293b;">Version History</h3>
+                            <div style="space-y: 8px;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #e2e8f0;">
+                                    <div>
+                                        <div style="font-weight: 600; font-size: 14px;">v2.0 (Current)</div>
+                                        <div style="font-size: 12px; color: #64748b;">Dec 17, 2024</div>
+                                    </div>
+                                    <button style="background: none; border: none; color: #667eea; cursor: pointer; font-size: 12px;">View</button>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #e2e8f0;">
+                                    <div>
+                                        <div style="font-weight: 600; font-size: 14px;">v1.0</div>
+                                        <div style="font-size: 12px; color: #64748b;">Dec 15, 2024</div>
+                                    </div>
+                                    <button style="background: none; border: none; color: #667eea; cursor: pointer; font-size: 12px;">View</button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div style="background: #f8fafc; padding: 20px; border-radius: 12px;">
+                            <h3 style="margin-bottom: 12px; color: #1e293b;">Usage Rights</h3>
+                            <div style="font-size: 14px; color: #64748b;">
+                                <div style="margin-bottom: 8px;"><strong>License:</strong> Internal Use Only</div>
+                                <div style="margin-bottom: 8px;"><strong>Expiry:</strong> No Expiration</div>
+                                <div><strong>Restrictions:</strong> Commercial use approved</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Upload Modal -->
+    <div class="modal" :class="{ 'active': showUploadModal }" @click.self="showUploadModal = false">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Upload New Assets</h2>
+                <button class="close-btn" @click="showUploadModal = false">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="upload-area" style="margin-bottom: 24px;">
+                    <i class="fas fa-cloud-upload-alt upload-icon"></i>
+                    <div class="upload-text">Drag files here or click to browse</div>
+                    <div class="upload-subtext">Support for PNG, JPG, PDF, AI, PSD, SVG files up to 100MB each</div>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+                    <div>
+                        <h3 style="margin-bottom: 16px; color: #1e293b;">Asset Details</h3>
+                        <div style="space-y: 16px;">
+                            <div>
+                                <label style="display: block; margin-bottom: 4px; font-weight: 600; font-size: 14px;">Title</label>
+                                <input type="text" placeholder="Enter asset title..." 
+                                       style="width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px;">
+                            </div>
+                            <div style="margin-bottom: 16px;">
+                                <label style="display: block; margin-bottom: 4px; font-weight: 600; font-size: 14px;">Description</label>
+                                <textarea placeholder="Enter description..." rows="3"
+                                          style="width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; resize: vertical;"></textarea>
+                            </div>
+                            <div style="margin-bottom: 16px;">
+                                <label style="display: block; margin-bottom: 4px; font-weight: 600; font-size: 14px;">Category</label>
+                                <select style="width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px;">
+                                    <option>Select category...</option>
+                                    <option>Logos</option>
+                                    <option>Marketing Materials</option>
+                                    <option>Social Media</option>
+                                    <option>Print Materials</option>
+                                    <option>Presentations</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <h3 style="margin-bottom: 16px; color: #1e293b;">Tags & Metadata</h3>
+                        <div style="space-y: 16px;">
+                            <div>
+                                <label style="display: block; margin-bottom: 4px; font-weight: 600; font-size: 14px;">Tags</label>
+                                <input type="text" placeholder="Enter tags separated by commas..." 
+                                       style="width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px;">
+                            </div>
+                            <div style="margin-bottom: 16px;">
+                                <label style="display: block; margin-bottom: 4px; font-weight: 600; font-size: 14px;">Project</label>
+                                <select style="width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px;">
+                                    <option>Select project...</option>
+                                    <option>Brand Refresh 2024</option>
+                                    <option>Holiday Campaign</option>
+                                    <option>Product Launch</option>
+                                    <option>Website Redesign</option>
+                                </select>
+                            </div>
+                            <div style="margin-bottom: 16px;">
+                                <label style="display: block; margin-bottom: 4px; font-weight: 600; font-size: 14px;">Usage Rights</label>
+                                <select style="width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px;">
+                                    <option>Internal Use Only</option>
+                                    <option>Commercial Use</option>
+                                    <option>Public Domain</option>
+                                    <option>Licensed</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px; padding-top: 24px; border-top: 1px solid #e2e8f0;">
+                    <button @click="showUploadModal = false" 
+                            style="background: #f8fafc; color: #64748b; border: 1px solid #e2e8f0; padding: 12px 24px; border-radius: 10px; font-weight: 600; cursor: pointer;">
+                        Cancel
+                    </button>
+                    <button class="btn-primary">
+                        <i class="fas fa-upload"></i>
+                        Upload Assets
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function damApp() {
+            return {
+                sidebarCollapsed: false,
+                searchQuery: '',
+                viewMode: 'grid',
+                dragOver: false,
+                showAssetModal: false,
+                showUploadModal: false,
+                
+                handleDrop(event) {
+                    this.dragOver = false;
+                    const files = Array.from(event.dataTransfer.files);
+                    console.log('Files dropped:', files);
+                    // Handle file upload logic here
+                },
+                
+                init() {
+                    // Initialize any components or data fetching
+                    console.log('DAM App initialized');
+                }
+            }
+        }
+    </script>
+</body>
+</html>-1611224923853-80b023f02d71?w=300&h=200&fit=crop" alt="Logo Design">
+                        <div class="asset-overlay">
+                            <div class="asset-actions">
+                                <button class="action-btn" title="Download">
+                                    <i class="fas fa-download"></i>
+                                </button>
+                                <button class="action-btn" title="Share">
+                                    <i class="fas fa-share"></i>
+                                </button>
+                                <button class="action-btn" title="Favorite">
+                                    <i class="fas fa-heart"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="asset-info">
+                        <div class="asset-title">Company Logo V2</div>
+                        <div class="asset-meta">
+                            <span>PNG • 2.3 MB</span>
+                            <span>2 days ago</span>
+                        </div>
+                        <div class="asset-tags">
+                            <span class="asset-tag">logo</span>
+                            <span class="asset-tag">brand</span>
+                            <span class="asset-tag">identity</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="asset-card">
+                    <div class="asset-preview">
+                        <img src="https://images.unsplash.com/photo-1586717791821-3f44a563fa4c?w=300&h=200&fit=crop" alt="Business Cards">
+                        <div class="asset-overlay">
+                            <div class="asset-actions">
+                                <button class="action-btn" title="Download">
+                                    <i class="fas fa-download"></i>
+                                </button>
+                                <button class="action-btn" title="Share">
+                                    <i class="fas fa-share"></i>
+                                </button>
+                                <button class="action-btn" title="Favorite">
+                                    <i class="fas fa-heart"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="asset-info">
+                        <div class="asset-title">Business Card Design</div>
+                        <div class="asset-meta">
+                            <span>AI • 5.1 MB</span>
+                            <span>5 days ago</span>
+                        </div>
+                        <div class="asset-tags">
+                            <span class="asset-tag">business-card</span>
+                            <span class="asset-tag">print</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="asset-card">
+                    <div class="asset-preview">
+                        <img src="https://images.unsplash.com/photo-1542744094-3a31f272c490?w=300&h=200&fit=crop" alt="Brochure">
+                        <div class="asset-overlay">
+                            <div class="asset-actions">
+                                <button class="action-btn" title="Download">
+                                    <i class="fas fa-download"></i>
+                                </button>
+                                <button class="action-btn" title="Share">
+                                    <i class="fas fa-share"></i>
+                                </button>
+                                <button class="action-btn" title="Favorite">
+                                    <i class="fas fa-heart"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="asset-info">
+                        <div class="asset-title">Product Brochure</div>
+                        <div class="asset-meta">
+                            <span>PDF • 12.8 MB</span>
+                            <span>1 week ago</span>
+                        </div>
+                        <div class="asset-tags">
+                            <span class="asset-tag">brochure</span>
+                            <span class="asset-tag">marketing</span>
+                            <span class="asset-tag">2024</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="asset-card">
+                    <div class="asset-preview">
+                        <img src="https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=300&h=200&fit=crop" alt="Social Media">
+                        <div class="asset-overlay">
+                            <div class="asset-actions">
+                                <button class="action-btn" title="Download">
+                                    <i class="fas fa-download"></i>
+                                </button>
+                                <button class="action-btn" title="Share">
+                                    <i class="fas fa-share"></i>
+                                </button>
+                                <button class="action-btn" title="Favorite">
+                                    <i class="fas fa-heart"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="asset-info">
+                        <div class="asset-title">Social Media Template</div>
+                        <div class="asset-meta">
+                            <span>PSD • 45.2 MB</span>
+                            <span>2 weeks ago</span>
+                        </div>
+                        <div class="asset-tags">
+                            <span class="asset-tag">social</span>
+                            <span class="asset-tag">template</span>
+                            <span class="asset-tag">instagram</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="asset-card">
+                    <div class="asset-preview">
+                        <i class="fas fa-file-alt placeholder"></i>
+                        <div class="asset-overlay">
+                            <div class="asset-actions">
+                                <button class="action-btn" title="Download">
+                                    <i class="fas fa-download"></i>
+                                </button>
+                                <button class="action-btn" title="Share">
+                                    <i class="fas fa-share"></i>
+                                </button>
+                                <button class="action-btn" title="Favorite">
+                                    <i class="fas fa-heart"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="asset-info">
+                        <div class="asset-title">Brand Guidelines</div>
+                        <div class="asset-meta">
+                            <span>PDF • 8.4 MB</span>
+                            <span>3 weeks ago</span>
+                        </div>
+                        <div class="asset-tags">
+                            <span class="asset-tag">guidelines</span>
+                            <span class="asset-tag">brand</span>
+                            <span class="asset-tag">documentation</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="asset-card">
+                    <div class="asset-preview">
+                        <img src="https://images.unsplash.com/photo-1611224923853-80b023f02d71?w=300&h=200&fit=crop" alt="Presentation">
+                        <div class="asset-overlay">
+                            <div class="asset-actions">
+                                <button class="action-btn" title="Download">
+                                    <i class="fas fa-download"></i>
+                                </button>
+                                <button class="action-btn" title="Share">
+                                    <i class="fas fa-share"></i>
+                                </button>
+                                <button class="action-btn" title="Favorite">
+                                    <i class="fas fa-heart"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="asset-info">
+                        <div class="asset-title">Presentation Template</div>
+                        <div class="asset-meta">
+                            <span>PPTX • 15.6 MB</span>
+                            <span>1 month ago</span>
+                        </div>
+                        <div class="asset-tags">
+                            <span class="asset-tag">presentation</span>
+                            <span class="asset-tag">template</span>
+                            <span class="asset-tag">corporate</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Asset Detail Modal -->
+    <div class="modal" :class="{ 'active': showAssetModal }" @click.self="showAssetModal = false">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Company Logo V2</h2>
+                <button class="close-btn" @click="showAssetModal = false">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div style="display: grid; grid-template-columns: 1fr 300px; gap: 24px;">
+                    <div>
+                        <img src="https://images.unsplash.com/photo
