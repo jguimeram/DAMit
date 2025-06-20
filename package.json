@@ -1,0 +1,28 @@
+{
+  "name": "damit",
+  "version": "1.0.0",
+  "description": "a DAM for graphic assets",
+  "main": "index.js",
+  "scripts": {
+    "test": "test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jguimeram/DAMit.git"
+  },
+  "keywords": [
+    "dam",
+    "laravel",
+    "opensource"
+  ],
+  "author": "jguimera",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/jguimeram/DAMit/issues"
+  },
+  "homepage": "https://github.com/jguimeram/DAMit#readme",
+  "dependencies": {
+    "alpinejs": "^3.14.9",
+    "http-server": "^14.1.1"
+  }
+}
